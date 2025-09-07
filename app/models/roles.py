@@ -8,4 +8,4 @@ class Rol(Base):
     nombre = Column(String,nullable=False)
     dias_prestamos = Column(Integer,nullable=True)
 
-    usuario = relationship("Usuario", back_populates="rol")
+    usuarios = relationship("Usuario", back_populates="rol")
