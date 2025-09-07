@@ -5,11 +5,11 @@ from app.core.database import Base
 class Prestamo(Base):
     __tablename__ = 'prestamos'
     prestamo_id = Column(Integer, primary_key=True)
-    libro_id = Column(Integer, ForeignKey('libro.libro_id'))
-    usuario_id = Column(Integer, ForeignKey('usuario.usuario_id'))
-    fecha_prestamo = Column(Date)
-    fecha_devolucion_esperada = Column(Date)
-    estado = Column(String)
+    libro_id = Column(Integer, ForeignKey('libros.libro_id'),nullable=False)
+    usuario_id = Column(Integer, ForeignKey('usuarios.usuario_id'),nullable=False)
+    fecha_prestamo = Column(Date, nullable=False)
+    fecha_devolucion_esperada = Column(Date, nullable=False)
+    estado = Column(String,nullable=False)
 
     libro = relationship("Libro", back_populates="prestamos")
     usuario = relationship("Usuario", back_populates="prestamos")

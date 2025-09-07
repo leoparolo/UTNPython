@@ -5,6 +5,6 @@ from app.core.database import Base
 class EstadoUsuario(Base):
     __tablename__ = 'estados_usuarios'
     estado_id = Column(Integer, primary_key=True)
-    nombre = Column(String)
+    nombre = Column(String, nullable=False)
 
-    usuario = relationship("Usuario", back_populates="estados_usuarios")
+    usuarios = relationship("Usuario", back_populates="estado")

@@ -5,9 +5,9 @@ from app.core.database import Base
 class Editorial(Base):
     __tablename__ = 'editoriales'
     editorial_id = Column(Integer, primary_key=True)
-    nombre = Column(String)
-    direccion = Column(String)
-    telefono = Column(String)
-    email = Column(String)
+    nombre = Column(String, nullable=False)
+    direccion = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
+    email = Column(String, nullable=True)
 
-    libros = relationship("Libro", back_populates="editoriales")
+    libros = relationship("Libro", back_populates="editorial")

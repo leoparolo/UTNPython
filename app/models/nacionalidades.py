@@ -5,7 +5,7 @@ from app.core.database import Base
 class Nacionalidad(Base):
     __tablename__ = 'nacionalidad'
     nacionalidad_id = Column(Integer, primary_key=True)
-    sdes = Column(String)
+    sdes = Column(String,nullable=False)
 
     autores = relationship("Autor", back_populates="nacionalidad")
 

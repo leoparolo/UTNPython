@@ -5,9 +5,9 @@ from app.core.database import Base
 class Ubicacion(Base):
     __tablename__ = 'ubicaciones'
     ubicacion_id = Column(Integer, primary_key=True)
-    codigo = Column(String)
-    nombre = Column(String)
-    tipo = Column(String)
-    activo = Column(Integer)
+    codigo = Column(String,nullable=False)
+    nombre = Column(String,nullable=False)
+    tipo = Column(String,nullable=True)
+    activo = Column(Integer,nullable=True)
 
-    libros = relationship("Libro", back_populates="ubicaciones")
+    libros = relationship("Libro", back_populates="ubicacion")

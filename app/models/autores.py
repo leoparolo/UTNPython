@@ -12,7 +12,7 @@ class Autor(Base):
     biografia = Column(Text, nullable=True)
 
     nacionalidad = relationship("Nacionalidad", back_populates="autores")
-    libros = relationship("Libro", back_populates="autores")
+    libros = relationship("Libro", back_populates="autor")
 
     def __repr__(self):
         return f"{self.apellido}, {self.nombre}"
