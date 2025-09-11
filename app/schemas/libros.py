@@ -5,7 +5,7 @@ class LibroBase(BaseModel):
     titulo: str = Field(..., min_length=1)
     autor_id: int
     editorial_id: int
-    isbn: Optional[str] = None
+    isbn: Optional[int] = None
     categoria_id: Optional[int] = None
     cantidad_ejemplares: int = Field(0, ge=0)
     ejemplares_disponibles: int = Field(0, ge=0)
@@ -29,7 +29,7 @@ class LibroUpdate(BaseModel):
     titulo: Optional[str] = Field(None, min_length=1)
     autor_id: Optional[int] = None
     editorial_id: Optional[int] = None
-    isbn: Optional[str] = None
+    isbn: Optional[int] = None
     categoria_id: Optional[int] = None
     cantidad_ejemplares: Optional[int] = Field(None, ge=0)
     ejemplares_disponibles: Optional[int] = Field(None, ge=0)

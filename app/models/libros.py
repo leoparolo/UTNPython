@@ -18,5 +18,5 @@ class Libro(Base):
     autor = relationship("Autor", back_populates="libros")
     editorial = relationship("Editorial", back_populates="libros")
     ubicacion = relationship("Ubicacion", back_populates="libros")
-    categorias = relationship("Categoria", back_populates="libros")
+    categoria = relationship("Categoria", back_populates="libros")
     prestamos = relationship("Prestamo", back_populates="libro")

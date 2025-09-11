@@ -8,4 +8,4 @@ class Categoria(Base):
     nombre = Column(String, nullable=False)
     descripcion = Column(String, nullable=True)
 
-    libros = relationship("Libro", back_populates="categorias")
+    libros = relationship("Libro", back_populates="categoria")
