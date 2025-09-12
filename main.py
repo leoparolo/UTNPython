@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.autores import router as autores_router
 from app.api.wikipedia import router as wikipedia_router
@@ -15,6 +18,27 @@ app = FastAPI(title="Open Biblioteca API", version="1.0.0")
 
 # Montar archivos estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return templates.TemplateResponse(
+        "error.html",
+        {"request": request, "mensaje": f"Ocurrió un error inesperado: {exc}"},
+        status_code=500
+    )
+
+# Handler para HTTPException (404, 403, etc)
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return templates.TemplateResponse(
+        "error.html",
+        {"request": request, "mensaje": exc.detail},
+        status_code=exc.status_code
+    )
+
 
 # Incluir routers
 app.include_router(autores_router, prefix="/api")

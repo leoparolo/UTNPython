@@ -49,7 +49,20 @@ async def detail_autor_html(
 
     return templates.TemplateResponse("autores/detail.html", {
         "request": request,
-        "autor": autor,  # Pasamos el objeto completo
+        "autor": autor,
         "autor_id": autor_id_int,
         "nacionalidades": nacionalidades
     })
+    
+@router.post("/api/autores/{autor_id}/eliminar", response_class=HTMLResponse)
+async def eliminar_autor(request: Request, autor_id: int):
+    try:
+        db.eliminar(autor_id)
+        mensaje = None
+    except Exception as e:
+        mensaje = f"No se pudo eliminar el autor: {e}"
+    autores = db.get_todos()
+    return templates.TemplateResponse(
+        "autores/list.html",
+        {"request": request, "autores": autores, "mensaje": mensaje}
+    )

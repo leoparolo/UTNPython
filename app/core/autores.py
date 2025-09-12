@@ -46,6 +46,7 @@ class GestorAutores:
         except Exception as e:
             self.session.rollback()
             print(f"Error: {e}")
+            raise
         return autor
 
 db = GestorAutores()

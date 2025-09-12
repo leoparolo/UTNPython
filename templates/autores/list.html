@@ -21,7 +21,11 @@
     white-space: nowrap;
   }
 </style>
-
+{% if mensaje %}
+<div class="alert alert-danger" role="alert">
+    {{ mensaje }}
+</div>
+{% endif %}
 <table id="tabla-autores" class="table table-striped table-hover table-bordered">
     <thead class="table-dark">
         <tr>
