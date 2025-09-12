@@ -1,7 +1,12 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.core.libros import db_libros as db
+from app.core.categorias import db as db_cat
+from app.core.autores import db as db_aut
+from app.core.editoriales import db as db_edit
+from app.core.ubicaciones import db as db_ubic
+
 
 router = APIRouter(tags=["Frontend Libros"])
 templates = Jinja2Templates(directory="templates")
@@ -13,8 +18,19 @@ async def list_libros(request: Request):
 
 @router.get("/libros/create", response_class=HTMLResponse)
 async def mostrar_formulario_creacion(request: Request):
-    # Si necesitas pasar datos extra (editoriales, autores, etc.), agrégalos aquí
-    return templates.TemplateResponse("libros/create.html", {"request": request})
+    autores = db_aut.get_todos()
+    categorias = db_cat.get_todos()
+    editoriales = db_edit.get_todos()
+    ubicaciones = db_ubic.get_todos()
+    return templates.TemplateResponse(
+        "libros/create.html",
+        {
+            "request": request,
+            "autores": autores,
+            "categorias": categorias,
+            "editoriales": editoriales,
+            "ubicaciones": ubicaciones
+        })
 
 @router.get("/libros/{libro_id}", response_class=HTMLResponse)
 async def detail_libro_html(request: Request, libro_id: str):
@@ -38,3 +54,45 @@ async def detail_libro_html(request: Request, libro_id: str):
         "libro": libro,
         "libro_id": libro_id_int
     })
+    
+@router.post("/", response_class=HTMLResponse)
+async def crear_libro_frontend(
+    request: Request,
+    titulo: str = Form(...),
+    isbn: int = Form(...),
+    autor_id: int = Form(...),
+    categoria_id: int = Form(...),
+    editorial_id: int = Form(...),
+    cantidad_ejemplares: int = Form(...),
+    ubicacion_id: int = Form(...),
+    resumen: str = Form("")
+):
+    try:
+        db.crear({
+            "titulo": titulo,
+            "isbn": isbn,
+            "autor_id": autor_id,
+            "categoria_id": categoria_id,
+            "editorial_id": editorial_id,
+            "cantidad_ejemplares": cantidad_ejemplares,
+            "ubicacion_id": ubicacion_id,
+            "resumen": resumen
+        })
+        return HTMLResponse(status_code=303)
+    except Exception as e:
+        autores = db_aut.get_todos()
+        categorias = db_cat.get_todos()
+        editoriales = db_edit.get_todos()
+        ubicaciones = db_ubic.get_todos()
+        return templates.TemplateResponse(
+            "libros/create.html",
+            {
+                "request": request,
+                "autores": autores,
+                "categorias": categorias,
+                "editoriales": editoriales,
+                "ubicaciones": ubicaciones,
+                "error": "No se pudo crear el libro. " + str(e)
+            },
+            status_code=400
+        )

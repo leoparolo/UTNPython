@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Form
 from app.core.libros import db_libros
 from app.schemas.libros import LibroCreate, LibroRead, LibroUpdate
 
@@ -17,9 +17,27 @@ def obtener_libro(libro_id: int):
     return libro
 
 @router.post("/", response_model=LibroRead, status_code=status.HTTP_201_CREATED)
-def crear_libro(data: LibroCreate):
+def crear_libro(
+    titulo: str = Form(...),
+    isbn: int = Form(...),
+    autor_id: int = Form(...),
+    categoria_id: int = Form(...),
+    editorial_id: int = Form(...),
+    cantidad_ejemplares: int = Form(...),
+    ubicacion_id: int = Form(...),
+    resumen: str = Form("")
+):
     try:
-        return db_libros.crear(data.model_dump())
+        return db_libros.crear({
+            "titulo": titulo,
+            "isbn": isbn,
+            "autor_id": autor_id,
+            "categoria_id": categoria_id,
+            "editorial_id": editorial_id,
+            "cantidad_ejemplares": cantidad_ejemplares,
+            "ubicacion_id": ubicacion_id,
+            "resumen": resumen
+        })
     except Exception:
         raise HTTPException(400, "No se pudo crear el libro")
 
