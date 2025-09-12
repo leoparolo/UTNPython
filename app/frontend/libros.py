@@ -49,10 +49,18 @@ async def detail_libro_html(request: Request, libro_id: str):
             status_code=404,
             detail=f"Libro con ID {libro_id_int} no encontrado"
         )
+    autores = db_aut.get_todos()
+    categorias = db_cat.get_todos()
+    editoriales = db_edit.get_todos()
+    ubicaciones = db_ubic.get_todos()
     return templates.TemplateResponse("libros/detail.html", {
         "request": request,
         "libro": libro,
-        "libro_id": libro_id_int
+        "libro_id": libro_id_int,
+        "autores": autores,
+        "categorias": categorias,
+        "editoriales": editoriales,
+        "ubicaciones": ubicaciones
     })
     
 @router.post("/", response_class=HTMLResponse)
@@ -93,6 +101,52 @@ async def crear_libro_frontend(
                 "editoriales": editoriales,
                 "ubicaciones": ubicaciones,
                 "error": "No se pudo crear el libro. " + str(e)
+            },
+            status_code=400
+        )
+        
+@router.post("/libros/{libro_id}/update", response_class=HTMLResponse)
+async def actualizar_libro_frontend(
+    request: Request,
+    libro_id: int,
+    titulo: str = Form(...),
+    isbn: int = Form(...),
+    autor_id: int = Form(...),
+    categoria_id: int = Form(...),
+    editorial_id: int = Form(...),
+    cantidad_ejemplares: int = Form(...),
+    ubicacion_id: int = Form(...),
+    resumen: str = Form("")
+):
+    try:
+        db.actualizar(libro_id, {
+            "titulo": titulo,
+            "isbn": isbn,
+            "autor_id": autor_id,
+            "categoria_id": categoria_id,
+            "editorial_id": editorial_id,
+            "cantidad_ejemplares": cantidad_ejemplares,
+            "ubicacion_id": ubicacion_id,
+            "resumen": resumen
+        })
+        return HTTPException(status_code=303)
+    except Exception as e:
+        autores = db_aut.get_todos()
+        categorias = db_cat.get_todos()
+        editoriales = db_edit.get_todos()
+        ubicaciones = db_ubic.get_todos()
+        libro = db.get_por_id(libro_id)
+        return templates.TemplateResponse(
+            "libros/detail.html",
+            {
+                "request": request,
+                "libro": libro,
+                "libro_id": libro_id,
+                "autores": autores,
+                "categorias": categorias,
+                "editoriales": editoriales,
+                "ubicaciones": ubicaciones,
+                "error": "No se pudo actualizar el libro. " + str(e)
             },
             status_code=400
         )

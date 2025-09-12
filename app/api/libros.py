@@ -42,8 +42,27 @@ def crear_libro(
         raise HTTPException(400, "No se pudo crear el libro")
 
 @router.post("/{libro_id}/update", response_model=LibroRead)
-def actualizar_libro(libro_id: int, data: LibroUpdate):
-    libro = db_libros.actualizar(libro_id, data.model_dump(exclude_unset=True))
+def actualizar_libro(
+    libro_id: int,
+    titulo: str = Form(...),
+    isbn: int = Form(...),
+    autor_id: int = Form(...),
+    categoria_id: int = Form(...),
+    editorial_id: int = Form(...),
+    cantidad_ejemplares: int = Form(...),
+    ubicacion_id: int = Form(...),
+    resumen: str = Form("")
+):
+    libro = db_libros.actualizar(libro_id, {
+        "titulo": titulo,
+        "isbn": isbn,
+        "autor_id": autor_id,
+        "categoria_id": categoria_id,
+        "editorial_id": editorial_id,
+        "cantidad_ejemplares": cantidad_ejemplares,
+        "ubicacion_id": ubicacion_id,
+        "resumen": resumen
+    })
     if not libro:
         raise HTTPException(404, "Libro no encontrado")
     return libro
