@@ -10,7 +10,7 @@ class Usuario(Base):
     apellido = Column(String,nullable=False)
     email = Column(String,nullable=False)
     rol_id = Column(Integer, ForeignKey('roles.rol_id'),nullable=False)
-    estado_id = Column(Integer, ForeignKey('estados_usuarios.estado_id'),nullable=False)
+    estado_id = Column(Integer, ForeignKey('estados_usuario.estado_id'),nullable=False)
 
     prestamos = relationship("Prestamo", back_populates="usuario")
     estado = relationship("EstadoUsuario", back_populates="usuarios")

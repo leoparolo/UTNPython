@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import date
 from typing import Literal
 
-PrestamoEstado = Literal["pendiente", "devuelto"]
+PrestamoEstado = Literal["activo"]
 
 class PrestamoCreate(BaseModel):
     usuario_id: int
@@ -17,7 +17,7 @@ class PrestamoRead(BaseModel):
     libro_id: int
     fecha_prestamo: date
     fecha_devolucion_esperada: date
-    estado: PrestamoEstado = Field("pendiente")
+    estado: PrestamoEstado = Field("activo")
 
     model_config = {"from_attributes": True}
 

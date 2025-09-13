@@ -8,6 +8,7 @@ from .editoriales import Editorial
 from .categorias import Categoria
 from .estados_usuarios import EstadoUsuario
 from .ubicaciones import Ubicacion
+from .base import Base
 
 __all__ = [
     "Autor",

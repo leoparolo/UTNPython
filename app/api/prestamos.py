@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Form
 from app.core.prestamos import db_prestamos
 from app.schemas.prestamos import PrestamoCreate, PrestamoRead
 
@@ -23,8 +23,11 @@ def obtener_prestamo(prestamo_id: int):
     return prestamo
 
 @router.post("/", response_model=PrestamoRead, status_code=status.HTTP_201_CREATED)
-def crear_prestamo(data: PrestamoCreate):
-    prestamo, error = db_prestamos.crear(usuario_id=data.usuario_id, libro_id=data.libro_id)
+def crear_prestamo(
+    usuario_id: int = Form(...),
+    libro_id: int = Form(...)
+):
+    prestamo, error = db_prestamos.crear(usuario_id=usuario_id, libro_id=libro_id)
     if error:
         # 400 si es regla de negocio, 404 si no existe, 409 si conflicto de estado/stock
         if error in ("Usuario o Libro inexistente",):

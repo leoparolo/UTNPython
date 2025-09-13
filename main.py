@@ -13,7 +13,10 @@ from app.frontend.autores import router as frontend_autores_router
 from app.frontend.libros import router as libros_frontend_router
 from app.frontend.prestamos import router as prestamos_frontend_router
 
+from app.models import Base
+from app.core.database import engine
 
+Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Open Biblioteca API", version="1.0.0")
 
 # Montar archivos estáticos

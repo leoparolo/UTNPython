@@ -48,8 +48,8 @@ class GestorPrestamos:
             return None, "Ya existe un préstamo pendiente de este libro para el usuario"
 
         dias = 7
-        if usuario.rol and usuario.rol.dias_prestamos:
-            dias = usuario.rol.dias_prestamos
+        if usuario.rol and usuario.rol.dias_prestamo:
+            dias = usuario.rol.dias_prestamo
 
         hoy = date.today()
         nuevo = Prestamo(
@@ -57,7 +57,7 @@ class GestorPrestamos:
             libro_id=libro_id,
             fecha_prestamo=hoy,
             fecha_devolucion_esperada=hoy + timedelta(days=dias),
-            estado="pendiente",
+            estado="activo",
         )
         try:
             libro.ejemplares_disponibles = (libro.ejemplares_disponibles or 0) - 1

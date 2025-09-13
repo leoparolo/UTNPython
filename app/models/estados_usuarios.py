@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 class EstadoUsuario(Base):
-    __tablename__ = 'estados_usuarios'
+    __tablename__ = 'estados_usuario'
     estado_id = Column(Integer, primary_key=True)
     nombre = Column(String, nullable=False)
 
