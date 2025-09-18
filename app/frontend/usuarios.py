@@ -40,6 +40,8 @@ async def list_usuarios(request: Request):
     async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
         response = await client.get("/usuarios/")
         if response.status_code != 200:
+            error_msg = response.json().get("detail", "Sin detalle en respuesta de API")
+            logger.exception("Error al obtener usuarios: %s", error_msg)
             raise HTTPException(status_code=response.status_code,
                                 detail="Error al obtener usuarios")
         usuarios = response.json()
@@ -85,6 +87,7 @@ async def crear_usuario_front(
 
             if resp.status_code not in (200, 303):
                 error_msg = resp.json().get("detail", "No se pudo crear el usuario")
+                logger.exception("Error al obtener usuarios: %s", error_msg)
                 roles = await get_roles(client)
                 return render_create_form(request, roles, valores, error_msg)
 
