@@ -35,7 +35,12 @@ async def get_roles(client: httpx.AsyncClient):
     return response_roles.json() if response_roles.status_code == 200 else []
 
 
-@router.get("/usuarios", response_class=HTMLResponse)
+@router.get("/usuarios",
+            response_class=HTMLResponse,
+            summary="Listar usuarios",
+            description="Obtiene todos los usuarios desde la API backend y los renderiza en una plantilla HTML.",
+            response_description="Página HTML con la lista de usuarios."
+            )
 async def list_usuarios(request: Request):
     async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
         response = await client.get("/usuarios/")
@@ -47,11 +52,15 @@ async def list_usuarios(request: Request):
         usuarios = response.json()
         return templates.TemplateResponse("usuarios/list.html", {
         "request": request,
-        "usuarios": usuarios
+        "usuarios": usuarios,
+        "mensaje": None
     })
 
 
-@router.get("/usuarios/create", response_class=HTMLResponse)
+@router.get("/usuarios/create",
+            response_class=HTMLResponse,
+            summary="Formulario HTML para crear un usuario",
+            response_description="Devuelve un formulario HTML para crear un nuevo usuario.")
 async def mostrar_formulario_creacion(request: Request):
     async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
         roles = await get_roles(client)
@@ -62,7 +71,11 @@ async def mostrar_formulario_creacion(request: Request):
         "valores": {} 
     })
 
-@router.post("/usuarios/", response_class=HTMLResponse)
+@router.post("/usuarios/",
+            response_class=HTMLResponse,
+            summary="Crear un usuario",
+            description="Obtiene los datos del formulario, crea un usuario mediante la API backend y redirige a la lista de usuarios.",
+            response_description="formulario HTML listando usuarios.")
 async def crear_usuario_front(
     request: Request,
     dni: str = Form(...),
@@ -93,10 +106,12 @@ async def crear_usuario_front(
 
             response = await client.get("/usuarios/")
             usuarios = response.json()
-
+        mensaje = "Usuario creado correctamente."
         return templates.TemplateResponse("usuarios/list.html", {
             "request": request, 
-            "usuarios": usuarios})
+            "usuarios": usuarios,
+            "mensaje": {"tipo": "success", "texto": mensaje}
+        })
 
     except Exception as e:
         async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
@@ -110,7 +125,11 @@ async def crear_usuario_front(
             "No se pudo crear el usuario",
             status_code=500)
 
-@router.get("/usuarios/{usuario_id}", response_class=HTMLResponse)
+@router.get("/usuarios/{usuario_id}",
+            response_class=HTMLResponse,
+            summary="Formulario HTML para actualizar un usuario.",
+            description="Envia un formulario HTML detallando un usuario específico obtenido desde la API backend.",
+            response_description="formulario HTML para ver el detalle de un usuario.")
 async def detalle_usuario(request: Request, usuario_id: int):
     async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
         response_usuario = await client.get(f"/usuarios/{usuario_id}")
@@ -132,7 +151,11 @@ async def detalle_usuario(request: Request, usuario_id: int):
         "estados": estados
     })
 
-@router.post("/usuarios/{usuario_id}/update", response_class=HTMLResponse)
+@router.post("/usuarios/{usuario_id}/update",
+            response_class=HTMLResponse,
+            summary="Actualizar un usuario",
+            description="Obtiene los datos del formulario, actualiza el usuario mediante la API backend y redirige a la lista de usuarios.",
+            response_description="formulario HTML listando usuarios")
 async def actualizar_usuario_front(
     request: Request,
     usuario_id: int,
@@ -181,9 +204,11 @@ async def actualizar_usuario_front(
             response = await client.get("/usuarios/")
             usuarios = response.json()
 
+        mensaje = "Usuario actualizado correctamente."
         return templates.TemplateResponse("usuarios/list.html", {
             "request": request,
-            "usuarios": usuarios
+            "usuarios": usuarios,
+            "mensaje": {"tipo": "success", "texto": mensaje}
         })
 
     except Exception as e:
@@ -198,19 +223,29 @@ async def actualizar_usuario_front(
             status_code=500,
         )
 
-@router.post("/api/usuarios/{usuario_id}/eliminar", response_class=HTMLResponse)
+@router.post("/usuarios/{usuario_id}/eliminar",
+            response_class=HTMLResponse,
+            summary="Eliminar un usuario",
+            description="Obtiene el ID del usuario, lo elimina mediante la API backend y redirige a la lista de usuarios.",
+            response_description="formulario HTML listando usuarios.")
 async def eliminar_usuario(request: Request, usuario_id: int):
     async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
-        response = await client.post(f"/usuarios/{usuario_id}/eliminar")
-        if response.status_code != 200:
+        response = await client.delete(f"/usuarios/{usuario_id}/eliminar")
+        tipo = "success"
+        if response.status_code != 303:
             mensaje = f"No se pudo eliminar el usuario: {response.text}"
+            tipo = "danger"
         else:
-            mensaje = None
+            mensaje = "Usuario eliminado correctamente."
+            tipo = "success"
         usuarios_response = await client.get("/usuarios/")
         if usuarios_response.status_code != 200:
             raise HTTPException(status_code=500, detail="Error al obtener la lista de usuarios")
         usuarios = usuarios_response.json()
+        print(tipo)
     return templates.TemplateResponse(
         "usuarios/list.html",
-        {"request": request, "usuarios": usuarios, "mensaje": mensaje}
+        {"request": request,
+        "usuarios": usuarios,
+        "mensaje": {"tipo": tipo, "texto": mensaje}}
     )

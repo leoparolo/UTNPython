@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+
+{% if mensaje %}
+<div class="alert alert-{{ mensaje.tipo }}" role="alert">
+    {{ mensaje.texto }}
+</div>
+{% endif %}
+
 <h2 class="mb-4 text-center">Listado de Usuarios</h2>
 
 <div class="mb-3 text-end">
@@ -47,7 +54,7 @@
                 <a href="/usuarios/{{ usuario.usuario_id }}" class="btn btn-sm btn-outline-primary me-1">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
-                <form method="post" action="/api/usuarios/{{ usuario.usuario_id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Estás seguro que querés eliminar este usuario?');">
+                <form method="post" action="/usuarios/{{ usuario.usuario_id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Estás seguro que querés eliminar este usuario?');">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash"></i> Eliminar
                     </button>

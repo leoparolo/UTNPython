@@ -9,18 +9,29 @@ from app.core.usuarios import db
 
 router = APIRouter(tags=["Usuarios API"])
 
-@router.get("/api/usuarios/", response_model=list[UsuarioRead])
+@router.get("/api/usuarios/",
+            response_model=list[UsuarioRead],
+            summary="Listar usuarios",
+            description="Obtiene todos los usuarios de la base de datos.",
+            response_description="Lista de usuarios")
 def listar_usuarios():
     return db.get_todos()
 
-@router.get("/api/usuarios/{usuario_id}", response_model=UsuarioRead)
+@router.get("/api/usuarios/{usuario_id}",
+            response_model=UsuarioRead,
+            summary="Obtener un usuario",
+            description="Obtiene un usuario de la base de datos por su ID.",
+            response_description="datos del usuario")
 def obtener_usuario(usuario_id: int):
     usuario = db.get_por_id(usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return usuario
 
-@router.post("/api/usuarios/", response_model=UsuarioRead)
+@router.post("/api/usuarios/",
+            response_model=UsuarioRead,
+            summary="Crear un usuario",
+            description="Obtiene los datos del usuario y lo crea en la base de datos.")
 def crear_usuario(usuario: UsuarioCreate):
     data = usuario.model_dump()
     data["estado_id"] = 1  # Asignar estado por defecto (Activo)
@@ -36,7 +47,10 @@ def crear_usuario(usuario: UsuarioCreate):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/api/usuarios/{usuario_id}/update", response_model=UsuarioRead)
+@router.post("/api/usuarios/{usuario_id}/update",
+            response_model=UsuarioRead,
+            summary="Actualizar un usuario",
+            description="Obtiene los datos del usuario y actualiza la información en la base de datos.")
 def actualizar_usuario(
     usuario_id: int,
     usuario: UsuarioUpdate
@@ -50,7 +64,10 @@ def actualizar_usuario(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
-@router.post("/api/usuarios/{usuario_id}/eliminar", response_model=UsuarioRead)
+@router.delete("/api/usuarios/{usuario_id}/eliminar",
+            response_model=UsuarioRead,
+            summary="Eliminar un usuario",
+            description="Elimina un usuario de la base de datos por su ID.")
 def eliminar_usuario(usuario_id: int):
     try:
         usuario = db.eliminar(usuario_id)
