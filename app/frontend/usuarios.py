@@ -100,7 +100,7 @@ async def crear_usuario_front(
 
             if resp.status_code not in (200, 303):
                 error_msg = resp.json().get("detail", "No se pudo crear el usuario")
-                logger.exception("Error al obtener usuarios: %s", error_msg)
+                logger.exception("Error al crear usuario: %s", error_msg)
                 roles = await get_roles(client)
                 return render_create_form(request, roles, valores, error_msg)
 
