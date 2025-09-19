@@ -5,11 +5,9 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.usuarios import UsuarioCreate, UsuarioUpdate, UsuarioRead
 from app.core.usuarios import db
 
-
-
 router = APIRouter(tags=["Usuarios API"])
 
-@router.get("/api/usuarios/",
+@router.get("/usuarios/",
             response_model=list[UsuarioRead],
             summary="Listar usuarios",
             description="Obtiene todos los usuarios de la base de datos.",
@@ -17,7 +15,7 @@ router = APIRouter(tags=["Usuarios API"])
 def listar_usuarios():
     return db.get_todos()
 
-@router.get("/api/usuarios/{usuario_id}",
+@router.get("/usuarios/{usuario_id}",
             response_model=UsuarioRead,
             summary="Obtener un usuario",
             description="Obtiene un usuario de la base de datos por su ID.",
@@ -28,7 +26,7 @@ def obtener_usuario(usuario_id: int):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return usuario
 
-@router.post("/api/usuarios/",
+@router.post("/usuarios/",
             response_model=UsuarioRead,
             summary="Crear un usuario",
             description="Obtiene los datos del usuario y lo crea en la base de datos.")
@@ -47,7 +45,7 @@ def crear_usuario(usuario: UsuarioCreate):
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/api/usuarios/{usuario_id}/update",
+@router.post("/usuarios/{usuario_id}/update",
             response_model=UsuarioRead,
             summary="Actualizar un usuario",
             description="Obtiene los datos del usuario y actualiza la información en la base de datos.")
@@ -64,7 +62,7 @@ def actualizar_usuario(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
-@router.delete("/api/usuarios/{usuario_id}/eliminar",
+@router.delete("/usuarios/{usuario_id}/eliminar",
             response_model=UsuarioRead,
             summary="Eliminar un usuario",
             description="Elimina un usuario de la base de datos por su ID.")

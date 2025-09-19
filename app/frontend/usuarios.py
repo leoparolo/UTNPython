@@ -242,7 +242,6 @@ async def eliminar_usuario(request: Request, usuario_id: int):
         if usuarios_response.status_code != 200:
             raise HTTPException(status_code=500, detail="Error al obtener la lista de usuarios")
         usuarios = usuarios_response.json()
-        print(tipo)
     return templates.TemplateResponse(
         "usuarios/list.html",
         {"request": request,
