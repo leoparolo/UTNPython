@@ -5,6 +5,6 @@ from app.schemas.estados_usuario import EstadosRead
 
 router = APIRouter(tags=["Estados usuario API"])
 
-@router.get("/api/estados/", response_model=List[EstadosRead])
+@router.get("/estados/", response_model=List[EstadosRead])
 def listar_estados():
     return db.get_todos()

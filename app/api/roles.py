@@ -5,6 +5,6 @@ from app.schemas.roles import RolRead
 
 router = APIRouter(tags=["Roles API"])
 
-@router.get("/api/roles/", response_model=List[RolRead])
+@router.get("/roles/", response_model=List[RolRead])
 def listar_roles():
     return db.get_todos()
