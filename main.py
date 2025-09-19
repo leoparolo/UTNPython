@@ -10,6 +10,9 @@ from app.api.usuarios import router as usuarios_router
 from app.api.roles import router as roles_router
 from app.api.estados_usuarios import router as estados_usuarios_router
 from app.api.nacionalidades import router as nacionalidades_router
+from app.api.editoriales import router as editoriales_router
+from app.api.ubicaciones import router as ubicaciones_router
+from app.api.categorias import router as categorias_router
 
 from app.frontend.autores import router as frontend_autores_router
 from app.frontend.libros import router as frontend_libros_router
@@ -36,6 +39,9 @@ app.include_router(roles_router, prefix="/api")
 app.include_router(estados_usuarios_router, prefix="/api")
 app.include_router(usuarios_router, prefix="/api")
 app.include_router(nacionalidades_router, prefix="/api")
+app.include_router(editoriales_router, prefix="/api")
+app.include_router(ubicaciones_router, prefix="/api")
+app.include_router(categorias_router, prefix="/api")
 
 app.include_router(frontend_autores_router)
 app.include_router(frontend_libros_router)

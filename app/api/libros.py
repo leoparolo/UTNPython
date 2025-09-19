@@ -1,74 +1,67 @@
-from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, status, Form
-from app.core.libros import db_libros
-from app.schemas.libros import LibroCreate, LibroRead, LibroUpdate
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import RedirectResponse
+from starlette.status import HTTP_303_SEE_OTHER
+from app.schemas.libros import LibroRead, LibroCreate, LibroUpdate
+from app.core.libros import db
 
-router = APIRouter(prefix="/libros", tags=["Libros API"])
+router = APIRouter(tags=["Libros API"])
 
-@router.get("/", response_model=List[LibroRead])
-def listar_libros(q: Optional[str] = None, page: int = Query(1, ge=1), size: int = Query(20, ge=1, le=200)):
-    return db_libros.get_todos(q=q, page=page, size=size)
+@router.get("/libros/",
+            response_model=list[LibroRead],
+            summary="Listar libros",
+            description="Obtiene todos los libros de la base de datos con paginación y búsqueda opcional.",
+            response_description="Lista de libros")
+def listar_libros():
+    return db.get_todos()
 
-@router.get("/{libro_id}", response_model=LibroRead)
+@router.get("/libros/{libro_id}",
+            response_model=LibroRead,
+            summary="Obtener un libro",
+            description="Obtiene un libro de la base de datos por su ID.",
+            response_description="datos del libro")
 def obtener_libro(libro_id: int):
-    libro = db_libros.get_por_id(libro_id)
+    libro = db.get_por_id(libro_id)
     if not libro:
-        raise HTTPException(404, "Libro no encontrado")
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
     return libro
 
-@router.post("/", response_model=LibroRead, status_code=status.HTTP_201_CREATED)
-def crear_libro(
-    titulo: str = Form(...),
-    isbn: int = Form(...),
-    autor_id: int = Form(...),
-    categoria_id: int = Form(...),
-    editorial_id: int = Form(...),
-    cantidad_ejemplares: int = Form(...),
-    ubicacion_id: int = Form(...),
-    resumen: str = Form("")
-):
+@router.post("/libros/",
+            response_model=LibroRead,
+            summary="Crear un libro",
+            description="Obtiene los datos del libro y lo crea en la base de datos.")
+def crear_libro(libro: LibroCreate):
+    data = libro.model_dump()
     try:
-        return db_libros.crear({
-            "titulo": titulo,
-            "isbn": isbn,
-            "autor_id": autor_id,
-            "categoria_id": categoria_id,
-            "editorial_id": editorial_id,
-            "cantidad_ejemplares": cantidad_ejemplares,
-            "ubicacion_id": ubicacion_id,
-            "resumen": resumen
-        })
-    except Exception:
-        raise HTTPException(400, "No se pudo crear el libro")
+        libro = db.crear(data)
+        return RedirectResponse(url="/libros", status_code=HTTP_303_SEE_OTHER)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
-@router.post("/{libro_id}/update", response_model=LibroRead)
+@router.post("/libros/{libro_id}/update",
+            response_model=LibroRead,
+            summary="Actualizar un libro",
+            description="Obtiene los datos del libro y actualiza la información en la base de datos.")
 def actualizar_libro(
     libro_id: int,
-    titulo: str = Form(...),
-    isbn: int = Form(...),
-    autor_id: int = Form(...),
-    categoria_id: int = Form(...),
-    editorial_id: int = Form(...),
-    cantidad_ejemplares: int = Form(...),
-    ubicacion_id: int = Form(...),
-    resumen: str = Form("")
+    libro: LibroUpdate
 ):
-    libro = db_libros.actualizar(libro_id, {
-        "titulo": titulo,
-        "isbn": isbn,
-        "autor_id": autor_id,
-        "categoria_id": categoria_id,
-        "editorial_id": editorial_id,
-        "cantidad_ejemplares": cantidad_ejemplares,
-        "ubicacion_id": ubicacion_id,
-        "resumen": resumen
-    })
-    if not libro:
-        raise HTTPException(404, "Libro no encontrado")
-    return libro
+    try:
+        datos = libro.model_dump(exclude_unset=True)
+        libro = db.actualizar(libro_id, datos)
+        if not libro:
+            raise HTTPException(status_code=404, detail="Libro no encontrado")
+        return RedirectResponse(url="/libros", status_code=HTTP_303_SEE_OTHER)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
-@router.post("/{libro_id}/eliminar", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/libros/{libro_id}/eliminar",
+            summary="Eliminar un libro",
+            description="Elimina un libro de la base de datos por su ID.")
 def eliminar_libro(libro_id: int):
-    libro = db_libros.eliminar(libro_id)
-    if not libro:
-        raise HTTPException(404, "Libro no encontrado")
+    try:
+        libro = db.eliminar(libro_id)
+        if not libro:
+            raise HTTPException(status_code=404, detail="Libro no encontrado")
+        return RedirectResponse(url="/libros", status_code=HTTP_303_SEE_OTHER)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e

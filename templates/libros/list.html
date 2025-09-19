@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+
+{% if mensaje %}
+<div class="alert alert-{{ mensaje.tipo }}" role="alert">
+    {{ mensaje.texto }}
+</div>
+{% endif %}
+
 <h2 class="mb-4 text-center">Listado de Libros</h2>
 
 <div class="mb-3 text-end">
@@ -42,7 +49,7 @@
         <tr>
             <td>{{ libro.isbn }}</td>
             <td>{{ libro.titulo }}</td>
-            <td>{{ libro.autor }}</td>
+            <td>{{ libro.autor.nombre }}</td>
             <td>{{ libro.resumen or "" }}</td>
             <td>{{ libro.categoria.nombre }}</td>
             <td>{{ libro.editorial.nombre }}</td>
@@ -53,7 +60,7 @@
                 <a href="/libros/{{ libro.libro_id }}" class="btn btn-sm btn-outline-primary me-1">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
-                <form method="post" action="/api/libros/{{ libro.libro_id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Estás seguro que querés eliminar este libro?');">
+                <form method="post" action="/libros/{{ libro.libro_id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Estás seguro que querés eliminar este libro?');">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash"></i> Eliminar
                     </button>

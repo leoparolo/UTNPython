@@ -54,7 +54,7 @@ async def mostrar_formulario_creacion(request: Request):
             summary="Crear un autor",
             description="Obtiene los datos del formulario, crea un autor mediante la API backend y redirige a la lista de autores.",
             response_description="formulario HTML listando autores.")
-async def crear_usuario_front(
+async def crear_autor_front(
     request: Request,
     nombre: str = Form(...),
     apellido: str = Form(...),
