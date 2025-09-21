@@ -180,7 +180,7 @@ async def actualizar_autor_front(
         async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
             resp = await client.post(
                 f"/autores/{autor_id}/update",
-                json=autor_update.model_dump())
+                json=autor_update.model_dump(mode="json"))
 
         if resp.status_code not in (200, 303):
             async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
@@ -245,36 +245,34 @@ async def eliminar_autor(request: Request, autor_id: int):
             "mensaje": {"tipo": tipo, "texto": mensaje}
         })
 
-# @router.get("/autores/bio/{autor_id}", response_class=HTMLResponse)
-# async def obtener_bio_wikipedia(request: Request, autor_id: int):
-#     print("entro al metodo")
-#     resumen = None
-#     error = None
-
-#     autor = db.get_por_id(autor_id)
-#     nacionalidades = db_nacionalidades.get_todos(order_by=Nacionalidad.sdes)
-
-#     if autor and autor.nombre:
-#         nombre_wiki = autor.nombre.replace(" ", "_") 
-#         url = f"https://es.wikipedia.org/api/rest_v1/page/summary/{nombre_wiki}"
-#         print(url)
-#         async with httpx.AsyncClient() as client:
-#             resp = await client.get(url)
-#             if resp.status_code == 200:
-#                 data = resp.json()
-#                 resumen = data.get("extract")
-#                 autor.biografia = resumen
-#             else:
-#                 error = "No se encontró información en Wikipedia."
-#     else:
-#         error = "No se encontró el autor en la base de datos."
-
-#     return templates.TemplateResponse(
-#         "autores/detail.html",
-#         {
-#             "request": request,
-#             "autor": autor,
-#             "autor_id": autor_id,
-#             "nacionalidades": nacionalidades
-#         }
-#     )
+@router.post("/autores/bio/{autor_id}", response_class=HTMLResponse)
+async def obtener_bio_wikipedia(request: Request, autor_id: int):
+    async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
+        response = await client.get(f"/autores/{autor_id}")
+        response_nacionalidades = await client.get("/nacionalidades/")
+                
+        if response.status_code != 200 or response_nacionalidades.status_code != 200:
+            error_msg = response.json().get("detail", "Sin detalle en respuesta de API")
+            logger.exception("Error al obtener autor: %s", error_msg)
+            raise HTTPException(status_code=response.status_code,
+                                detail="Error al obtener autor")
+        autor = response.json()
+        nacionalidades = response_nacionalidades.json()
+        
+    async with httpx.AsyncClient(base_url="https://es.wikipedia.org/api") as clientWiki:
+        responseWiki = await clientWiki.get(f"/rest_v1/page/summary/{autor['nombre'].replace(' ', '_')}")
+        if responseWiki.status_code != 200:
+            error_msg = response.json().get("detail", "Sin detalle en respuesta de API")
+            logger.exception("Error al obtener biografia de wikipedia: %s", error_msg)
+            raise HTTPException(status_code=responseWiki.status_code,
+                                detail="Error al obtener biografia wikipedia")
+        data = responseWiki.json()
+        resumen = data.get("extract", "No se encontró información en Wikipedia.")
+        autor['biografia'] = resumen
+        print(autor['biografia'])
+        return templates.TemplateResponse("autores/detail.html", {
+            "request": request,
+            "autor": autor,
+            "autor_id": autor_id,
+            "nacionalidades": nacionalidades
+        })

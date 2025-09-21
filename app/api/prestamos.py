@@ -26,13 +26,6 @@ def listar_prestamos():
         for p in prestamos
     ]
 
-# @router.get("/{prestamo_id}", response_model=PrestamoRead)
-# def obtener_prestamo(prestamo_id: int):
-#     prestamo = db_prestamos.get_por_id(prestamo_id)
-#     if not prestamo:
-#         raise HTTPException(404, "Préstamo no encontrado")
-#     return prestamo
-
 @router.post("/prestamos/",
             response_model=list[PrestamoRead],
             summary="Crear un préstamo",
