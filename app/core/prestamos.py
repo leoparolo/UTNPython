@@ -3,28 +3,22 @@ from app.core.database import SessionLocal
 from app.models.prestamos import Prestamo
 from app.models.usuarios import Usuario
 from app.models.libros import Libro
+from app.schemas.prestamos import PrestamoCreate
 
 class GestorPrestamos:
     def __init__(self):
         self.session = SessionLocal()
 
-    def get_todos(self, estado: str | None = None, usuario_id: int | None = None,
-                  libro_id: int | None = None, page: int = 1, size: int = 20):
-        q = self.session.query(Prestamo)
-        if estado:
-            q = q.filter(Prestamo.estado == estado)
-        if usuario_id:
-            q = q.filter(Prestamo.usuario_id == usuario_id)
-        if libro_id:
-            q = q.filter(Prestamo.libro_id == libro_id)
-        return q.order_by(Prestamo.prestamo_id.desc()).offset((page-1)*size).limit(size).all()
+    def get_todos(self):
+        return self.session.query(Prestamo).order_by(Prestamo.prestamo_id).all()
 
     def get_por_id(self, prestamo_id: int):
         return self.session.query(Prestamo).get(prestamo_id)
 
-    def crear(self, usuario_id: int, libro_id: int):
-        usuario = self.session.query(Usuario).get(usuario_id)
-        libro = self.session.query(Libro).get(libro_id)
+    def crear(self, datos_prestamo:dict):
+        nuevo = PrestamoCreate(**datos_prestamo)
+        usuario = self.session.query(Usuario).get(nuevo.usuario_id)
+        libro = self.session.query(Libro).get(nuevo.libro_id)
 
         if not usuario or not libro:
             return None, "Usuario o Libro inexistente"
@@ -38,8 +32,8 @@ class GestorPrestamos:
         duplicado = (
             self.session.query(Prestamo)
             .filter(
-                Prestamo.usuario_id == usuario_id,
-                Prestamo.libro_id == libro_id,
+                Prestamo.usuario_id == nuevo.usuario_id,
+                Prestamo.libro_id == nuevo.libro_id,
                 Prestamo.estado != "devuelto",
             )
             .first()
@@ -53,8 +47,8 @@ class GestorPrestamos:
 
         hoy = date.today()
         nuevo = Prestamo(
-            usuario_id=usuario_id,
-            libro_id=libro_id,
+            usuario_id=nuevo.usuario_id,
+            libro_id=nuevo.libro_id,
             fecha_prestamo=hoy,
             fecha_devolucion_esperada=hoy + timedelta(days=dias),
             estado="activo",
@@ -71,14 +65,13 @@ class GestorPrestamos:
             return None, "No se pudo crear el préstamo"
 
     def devolver(self, prestamo_id: int):
-        prestamo = self.session.query(Prestamo).get(prestamo_id)
+        prestamo = self.session.get(Prestamo, prestamo_id)
         if not prestamo:
             return None, "Préstamo no encontrado"
-        if prestamo.estado == "devuelto":
-            return None, "El préstamo ya fue devuelto"
         try:
-            prestamo.estado = "devuelto"
-            libro = self.session.query(Libro).get(prestamo.libro_id)
+            prestamo.estado = "completado"
+            prestamo.fecha_devolucion_real = date.today()
+            libro = self.session.get(Libro, prestamo.libro_id)
             if libro:
                 libro.ejemplares_disponibles = (libro.ejemplares_disponibles or 0) + 1
             self.session.commit()
@@ -89,4 +82,4 @@ class GestorPrestamos:
             print(f"Error devolver préstamo: {e}")
             return None, "No se pudo devolver el préstamo"
 
-db_prestamos = GestorPrestamos()
+db = GestorPrestamos()

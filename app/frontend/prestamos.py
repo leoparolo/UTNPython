@@ -36,11 +36,13 @@ async def list_prestamos(request: Request):
             response_description="Devuelve un formulario HTML para crear un nuevo préstamo.")
 async def mostrar_formulario_creacion(request: Request):
     async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
-        libros = await client.get("/libros/")
-        usuarios = await client.get("/usuarios/")
-        if libros.status_code != 200 or usuarios.status_code != 200:
+        resp_libros = await client.get("/libros/")
+        resp_usuarios = await client.get("/usuarios/")
+        if resp_libros.status_code != 200 or resp_usuarios.status_code != 200:
             raise HTTPException(status_code=500, detail="Error al obtener libros o usuarios")
 
+        libros = resp_libros.json()
+        usuarios = resp_usuarios.json()
     return templates.TemplateResponse("prestamos/create.html", {
         "request": request,
         "libros": libros,
@@ -106,31 +108,32 @@ async def crear_prestamo_front(
             status_code=500
         )
 
-@router.get("/prestamos/{prestamo_id}",
+@router.post("/prestamos/{prestamo_id}/finalizar",
             response_class=HTMLResponse,
-            summary="Formulario HTML para actualizar un préstamo.",
-            description="Envia un formulario HTML detallando un préstamo específico obtenido desde la API backend.",
-            response_description="formulario HTML para ver el detalle de un préstamo.")
-async def detalle_prestamo(request: Request, prestamo_id: str):
-    try:
-        id_prestamo = PrestamoDetalleRead(prestamo_id=prestamo_id)
+            summary="Registar la devolución de un préstamo",
+            description="Obtiene el préstamo, lo actualiza mediante la API backend y redirige a la lista de préstamos.",
+            response_description="formulario HTML listando préstamos.")
+async def registrar_devolucion(request: Request, prestamo_id: int):
+    async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
+        resp = await client.post(f"/prestamos/{prestamo_id}/devolucion")
+        if resp.status_code not in (200, 303):
+            error_msg = resp.json().get("detail", "Error al registrar devolución")
+            logger.exception("Error al registrar devolución: %s", error_msg)
+            resp_prestamos = await client.get("/prestamos/")
+            prestamos = resp_prestamos.json()  
 
-        async with httpx.AsyncClient(base_url=settings.API_BASE_URL) as client:
-            resp_prestamo = await client.get(f"/prestamos/{id_prestamo.prestamo_id}")
-            if resp_prestamo.status_code != 200:
-                raise HTTPException(
-                    status_code=resp_prestamo.status_code,
-                    detail=f"Error al obtener el préstamo con ID {id_prestamo.prestamo_id}"
-                )
-            prestamo = resp_prestamo.json()
+            return templates.TemplateResponse("prestamos/list.html", {
+                "request": request,
+                "prestamos": prestamos,
+                "mensaje": {"tipo": "danger", "texto": error_msg}
+            })
 
-        return templates.TemplateResponse("prestamos/detail.html", {
+        resp_prestamos = await client.get("/prestamos/")
+        prestamos = resp_prestamos.json()  
+        mensaje = "El libro fue devuelto correctamente."
+
+        return templates.TemplateResponse("prestamos/list.html", {
         "request": request,
-        "prestamo": prestamo,
-        "prestamo_id": id_prestamo.prestamo_id
+        "prestamos": prestamos,
+        "mensaje": {"tipo": "success", "texto": mensaje}
         })
-    except Exception as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"El ID debe ser un número entero positivo. Se recibió: {prestamo_id}"
-        ) from e

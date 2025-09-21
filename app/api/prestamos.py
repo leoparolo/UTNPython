@@ -1,47 +1,55 @@
-from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, status, Form
-from app.core.prestamos import db_prestamos
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import RedirectResponse
+from starlette.status import HTTP_303_SEE_OTHER
 from app.schemas.prestamos import PrestamoCreate, PrestamoRead
+from app.core.prestamos import db
 
-router = APIRouter(prefix="/prestamos", tags=["Préstamos API"])
+router = APIRouter(tags=["Préstamos API"])
 
-@router.get("/", response_model=List[PrestamoRead])
-def listar_prestamos(
-    estado: Optional[str] = None,
-    usuario_id: Optional[int] = None,
-    libro_id: Optional[int] = None,
-    page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=200),
-):
-    return db_prestamos.get_todos(estado=estado, usuario_id=usuario_id, libro_id=libro_id, page=page, size=size)
+@router.get("/prestamos/",
+            response_model=list[PrestamoRead],
+            summary="Listar préstamos",
+            description="Obtiene todos los préstamos de la base de datos.",
+            response_description="Lista de préstamos")
+def listar_prestamos():
+    prestamos = db.get_todos()
+    return [
+        PrestamoRead(
+            prestamo_id=p.prestamo_id,
+            usuario=p.usuario,
+            libro=p.libro,
+            fecha_prestamo=p.fecha_prestamo,
+            fecha_devolucion_esperada=p.fecha_devolucion_esperada,
+            fecha_devolucion_real=p.fecha_devolucion_real,
+            estado=p.estado_calculado
+        )
+        for p in prestamos
+    ]
 
-@router.get("/{prestamo_id}", response_model=PrestamoRead)
-def obtener_prestamo(prestamo_id: int):
-    prestamo = db_prestamos.get_por_id(prestamo_id)
-    if not prestamo:
-        raise HTTPException(404, "Préstamo no encontrado")
-    return prestamo
+# @router.get("/{prestamo_id}", response_model=PrestamoRead)
+# def obtener_prestamo(prestamo_id: int):
+#     prestamo = db_prestamos.get_por_id(prestamo_id)
+#     if not prestamo:
+#         raise HTTPException(404, "Préstamo no encontrado")
+#     return prestamo
 
-@router.post("/", response_model=PrestamoRead, status_code=status.HTTP_201_CREATED)
-def crear_prestamo(
-    usuario_id: int = Form(...),
-    libro_id: int = Form(...)
-):
-    prestamo, error = db_prestamos.crear(usuario_id=usuario_id, libro_id=libro_id)
-    if error:
-        # 400 si es regla de negocio, 404 si no existe, 409 si conflicto de estado/stock
-        if error in ("Usuario o Libro inexistente",):
-            raise HTTPException(404, error)
-        if error in ("No hay ejemplares disponibles de este libro",
-                     "Ya existe un préstamo pendiente de este libro para el usuario",
-                     "Usuario no habilitado para préstamos"):
-            raise HTTPException(409, error)
-        raise HTTPException(400, error)
-    return prestamo
+@router.post("/prestamos/",
+            response_model=list[PrestamoRead],
+            summary="Crear un préstamo",
+            description="Obtiene los datos del préstamo y lo crea en la base de datos."
+            )
+def crear_prestamo(prestamo: PrestamoCreate):
+    data = prestamo.model_dump()
+    try:
+        prestamo = db.crear(data)
+        return RedirectResponse(url="/prestamos", status_code=HTTP_303_SEE_OTHER)
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=str(e)) from e
 
-@router.post("/{prestamo_id}/devolver", response_model=PrestamoRead)
+
+@router.post("/prestamos/{prestamo_id}/devolucion", response_model=PrestamoRead)
 def devolver_prestamo(prestamo_id: int):
-    prestamo, error = db_prestamos.devolver(prestamo_id)
+    prestamo, error = db.devolver(prestamo_id)
     if error:
         if error == "Préstamo no encontrado":
             raise HTTPException(404, error)

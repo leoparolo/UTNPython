@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+
+{% if mensaje %}
+<div class="alert alert-{{ mensaje.tipo }}" role="alert">
+  {{ mensaje.texto }}
+</div>
+{% endif %}
+
 <h2 class="mb-4 text-center">Listado de Préstamos</h2>
 
 <div class="mb-3 text-end">
@@ -27,9 +34,9 @@
             <td>{{ prestamo.prestamo_id }}</td>
             <td>{{ prestamo.usuario.nombre }} {{ prestamo.usuario.apellido }}</td>
             <td>{{ prestamo.libro.titulo }}</td>
-            <td>{{ prestamo.fecha_prestamo.strftime('%Y-%m-%d %H:%M') if prestamo.fecha_prestamo else '—' }}</td>
-            <td>{{ prestamo.fecha_devolucion_esperada.strftime('%Y-%m-%d %H:%M') if prestamo.fecha_devolucion_esperada else '—' }}</td>
-            <td>{{ prestamo.fecha_devolucion_real.strftime('%Y-%m-%d %H:%M') if prestamo.fecha_devolucion_real else '—' }}</td>
+            <td>{{ prestamo.fecha_prestamo if prestamo.fecha_prestamo else '—' }}</td>
+            <td>{{ prestamo.fecha_devolucion_esperada if prestamo.fecha_devolucion_esperada else '—' }}</td>
+            <td>{{ prestamo.fecha_devolucion_real if prestamo.fecha_devolucion_real else '—' }}</td>
             <td data-order="{% if prestamo.estado == 'D' %}4{% elif prestamo.estado == 'A' %}2{% elif prestamo.estado == 'E' %}1{% elif prestamo.estado == 'P' %}3{% else %}5{% endif %}">
               {% if prestamo.estado == 'D' %}
                 <span class="badge bg-success">{{ prestamo.estado }}</span>
@@ -44,7 +51,7 @@
 
             <td>
                 {% if not prestamo.fecha_devolucion_real %}
-                <form method="post" action="/api/prestamos/{{ prestamo.prestamo_id }}/finalizar" class="d-inline">
+                <form method="post" action="/prestamos/{{ prestamo.prestamo_id }}/finalizar" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-outline-success" 
                       onclick="return confirm('¿Finalizar préstamo y registrar devolución?');">
                         <i class="bi bi-check-lg"></i> Finalizar
