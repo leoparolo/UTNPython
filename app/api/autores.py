@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import RedirectResponse
-from starlette.status import HTTP_303_SEE_OTHER
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import APIRouter
 from app.schemas.autores import AutorRead, AutorCreate, AutorUpdate
 from app.core.autores import db
+from app.core.error import AppException
+from app.core.logging_config import logger
 
 router = APIRouter(tags=["Autores API"])
 
@@ -22,23 +23,33 @@ def listar_autores():
 def obtener_autor(autor_id: int):
     autor = db.get_por_id(autor_id)
     if not autor:
-        raise HTTPException(status_code=404, detail="Autor no encontrado")
+        raise AppException(
+            title="Autor no encontrado",
+            detail=f"No existe un autor con id {autor_id}",
+            status_code=404,
+            type_="about:blank"
+        )
     return autor
 
 @router.post("/autores/",
-            response_model=AutorRead,
+            status_code=204,
             summary="Crear un autor",
             description="Obtiene los datos del autor y lo crea en la base de datos.")
 def crear_autor(autor: AutorCreate):
     data = autor.model_dump()
     try:
-        autor = db.crear(data)
-        return RedirectResponse(url="/autores", status_code=HTTP_303_SEE_OTHER)
+        db.crear(data)
+        return None
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise AppException(
+            title="Error al crear autor",
+            detail=str(e),
+            status_code=400,
+            type_="about:blank"
+        ) from e
 
-@router.post("/autores/{autor_id}/update",
-            response_model=AutorRead,
+@router.put("/autores/{autor_id}/update",
+            status_code=204,
             summary="Actualizar un autor",
             description="Obtiene los datos del autor y actualiza la información en la base de datos.")
 def actualizar_autor(
@@ -47,22 +58,65 @@ def actualizar_autor(
 ):
     try:
         datos = autor.model_dump(exclude_unset=True)
-        autor = db.actualizar(autor_id, datos)
-        if not autor:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        return RedirectResponse(url="/autores", status_code=HTTP_303_SEE_OTHER)
+        autor_actualizado = db.actualizar(autor_id, datos)
+        if not autor_actualizado:
+            raise AppException(
+                title="Autor no encontrado",
+                detail=f"No existe un autor con id {autor_id}",
+                status_code=404,
+                type_="about:blank"
+            )
+
+        return None
+
+    except SQLAlchemyError as e:
+        logger.exception("Error de base de datos al actualizar autor %s", autor_id)
+        raise AppException(
+            title="Error en base de datos",
+            detail=str(e),
+            status_code=500,
+            type_="about:blank"
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        logger.exception("Error inesperado al actualizar autor %s", autor_id)
+        raise AppException(
+            title="Error inesperado",
+            detail=str(e),
+            status_code=500,
+            type_="about:blank"
+        ) from e
 
 @router.delete("/autores/{autor_id}/eliminar",
-            response_model=AutorRead,
+            status_code=204,
             summary="Eliminar un autor",
             description="Elimina un autor de la base de datos por su ID.")
 def eliminar_autor(autor_id: int):
     try:
-        autor = db.eliminar(autor_id)
-        if not autor:
-            raise HTTPException(status_code=404, detail="Autor no encontrado")
-        return RedirectResponse(url="/autores", status_code=HTTP_303_SEE_OTHER)
+        autor_eliminado = db.eliminar(autor_id)
+
+        if not autor_eliminado:
+            raise AppException(
+                title="Autor no encontrado",
+                detail=f"No existe un autor con id {autor_id}",
+                status_code=404,
+                type_="about:blank"
+            )
+
+        return None
+
+    except SQLAlchemyError as e:
+        logger.exception("Error de base de datos al eliminar autor %s", autor_id)
+        raise AppException(
+            title="Error en base de datos",
+            detail=str(e),
+            status_code=500,
+            type_="about:blank"
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        logger.exception("Error inesperado al eliminar autor %s", autor_id)
+        raise AppException(
+            title="Error inesperado",
+            detail=str(e),
+            status_code=500,
+            type_="about:blank"
+        ) from e

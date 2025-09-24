@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.autores import router as autores_router
 from app.api.libros import router as libros_router
@@ -24,6 +25,7 @@ from app.core.database import engine
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Open Biblioteca API", version="1.0.0")
 
+app.add_middleware(SessionMiddleware, secret_key="super-secret-key")
 # Montar archivos estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
